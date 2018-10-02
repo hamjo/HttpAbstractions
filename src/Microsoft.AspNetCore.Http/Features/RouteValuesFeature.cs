@@ -7,6 +7,20 @@ namespace Microsoft.AspNetCore.Http.Features
 {
     public class RouteValuesFeature : IRouteValuesFeature
     {
-        public RouteValueDictionary RouteValues { get; set; }
+        private RouteValueDictionary _routeValues;
+
+        public RouteValueDictionary RouteValues
+        {
+            get
+            {
+                if (_routeValues == null)
+                {
+                    _routeValues = new RouteValueDictionary();
+                }
+
+                return _routeValues;
+            }
+            set => _routeValues = value;
+        }
     }
 }

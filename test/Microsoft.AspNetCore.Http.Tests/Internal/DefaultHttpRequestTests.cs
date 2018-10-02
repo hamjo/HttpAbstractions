@@ -199,31 +199,34 @@ namespace Microsoft.AspNetCore.Http.Internal
         public void RouteValues_GetAndSet()
         {
             var context = new DefaultHttpContext();
+            var request = context.Request;
+
             var routeValuesFeature = context.Features.Get<IRouteValuesFeature>();
             // No feature set for initial DefaultHttpRequest
             Assert.Null(routeValuesFeature);
 
-            var request = context.Request;
-            var routeValues = request.RouteValues;
-            // Route values defaults to null
-            Assert.Null(routeValues);
+            // Route values returns empty collection by default
+            Assert.Empty(request.RouteValues);
+
+            // Get and set value on request route values
+            request.RouteValues["new"] = "setvalue";
+            Assert.Equal("setvalue", request.RouteValues["new"]);
 
             routeValuesFeature = context.Features.Get<IRouteValuesFeature>();
             // Accessing DefaultHttpRequest.RouteValues creates feature
             Assert.NotNull(routeValuesFeature);
 
             request.RouteValues = new RouteValueDictionary(new { key = "value" });
-            routeValues = request.RouteValues;
             // Can set DefaultHttpRequest.RouteValues
-            Assert.NotNull(routeValues);
-            Assert.Equal("value", routeValues["key"]);
+            Assert.NotNull(request.RouteValues);
+            Assert.Equal("value", request.RouteValues["key"]);
 
             // DefaultHttpRequest.RouteValues uses feature
-            Assert.Equal(routeValuesFeature.RouteValues, routeValues);
+            Assert.Equal(routeValuesFeature.RouteValues, request.RouteValues);
 
-            routeValuesFeature.RouteValues = new RouteValueDictionary();
-            routeValues = request.RouteValues;
-            Assert.Empty(routeValues);
+            // Setting route values to null sets empty collection on request
+            routeValuesFeature.RouteValues = null;
+            Assert.Empty(request.RouteValues);
 
             var customRouteValuesFeature = new CustomRouteValuesFeature
             {
@@ -235,7 +238,7 @@ namespace Microsoft.AspNetCore.Http.Internal
 
             // Can clear feature
             context.Features.Set<IRouteValuesFeature>(null);
-            Assert.Null(request.RouteValues);
+            Assert.Empty(request.RouteValues);
         }
 
         private class CustomRouteValuesFeature : IRouteValuesFeature
